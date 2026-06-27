@@ -22,6 +22,7 @@ Single table: **`contracts`**. One row per saved contract, owned by a user. Row 
 | `payment_terms` | `text` | | AI | Payment details |
 | `important_deadlines` | `jsonb` | default `'[]'` | AI | Array of deadline objects |
 | `obligations` | `jsonb` | default `'[]'` | AI | Array of obligation objects |
+| `missing_clauses` | `jsonb` | default `'[]'` | AI | Array of potentially-missing clause objects (Week 3 feature) |
 | `created_at` | `timestamptz` | not null, default `now()` | system | Insert time |
 | `updated_at` | `timestamptz` | not null, default `now()` | system | Last update time |
 
@@ -45,6 +46,18 @@ Single table: **`contracts`**. One row per saved contract, owned by a user. Row 
 }
 ```
 
+### `missing_clauses` element shape
+```json
+{
+  "clause_name": "",
+  "importance": "Low | Medium | High",
+  "why_it_matters": "",
+  "recommendation": ""
+}
+```
+
+> **Note:** the AI-Assisted Privacy Review and Explain-a-Clause features are generated on demand and are intentionally **not** stored — there are no columns for redaction suggestions or clause explanations.
+
 ## DDL
 
 ```sql
@@ -64,12 +77,22 @@ create table public.contracts (
   payment_terms         text,
   important_deadlines   jsonb default '[]'::jsonb,
   obligations           jsonb default '[]'::jsonb,
+  missing_clauses       jsonb default '[]'::jsonb,
   created_at            timestamptz not null default now(),
   updated_at            timestamptz not null default now()
 );
 
 -- Helpful index for per-user queries
 create index contracts_user_id_idx on public.contracts (user_id);
+```
+
+### Migration (Week 3 — missing clause detection)
+
+If the table already exists from the original build, add the column with:
+
+```sql
+alter table public.contracts
+  add column if not exists missing_clauses jsonb default '[]'::jsonb;
 ```
 
 ## Auto-update `updated_at`
