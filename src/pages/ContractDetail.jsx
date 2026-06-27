@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { getContract, analyzeContract, saveAnalysis } from '../lib/contracts'
+import {
+  getContract,
+  analyzeContract,
+  saveAnalysis,
+  generatePlainEnglish,
+  updateContract,
+} from '../lib/contracts'
 
 const riskColors = {
   Low: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -15,10 +21,13 @@ const importanceColors = {
   High: 'bg-red-100 text-red-700',
 }
 
-function Section({ title, children }) {
+function Section({ title, children, action }) {
   return (
     <div className="rounded-xl bg-white border border-slate-200 p-6">
-      <h2 className="text-sm font-semibold text-slate-900 mb-3">{title}</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+        {action}
+      </div>
       {children}
     </div>
   )
@@ -30,6 +39,7 @@ function ContractDetail() {
   const [contract, setContract] = useState(null)
   const [fetching, setFetching] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
+  const [summarizing, setSummarizing] = useState(false)
   const [error, setError] = useState(null)
 
   const load = async () => {
@@ -57,6 +67,22 @@ function ContractDetail() {
       setError(e.message)
     } finally {
       setAnalyzing(false)
+    }
+  }
+
+  const handlePlainEnglish = async () => {
+    setError(null)
+    setSummarizing(true)
+    try {
+      const result = await generatePlainEnglish(contract.redacted_text)
+      const updated = await updateContract(id, {
+        plain_english_summary: result.plain_english_summary,
+      })
+      setContract(updated)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setSummarizing(false)
     }
   }
 
@@ -145,16 +171,34 @@ function ContractDetail() {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-slate-700 mb-3">{contract.summary}</p>
-              {contract.plain_english_summary && (
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-xs font-medium text-slate-500 mb-1">
-                    In plain English
-                  </p>
-                  <p className="text-sm text-slate-700">
-                    {contract.plain_english_summary}
-                  </p>
-                </div>
+              <p className="text-sm text-slate-700">{contract.summary}</p>
+            </Section>
+
+            {/* Plain-English summary (Feature 2) */}
+            <Section
+              title="Plain-English summary"
+              action={
+                <button
+                  onClick={handlePlainEnglish}
+                  disabled={summarizing}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 transition-colors"
+                >
+                  {summarizing
+                    ? 'Generating Summary...'
+                    : contract.plain_english_summary
+                    ? 'Regenerate'
+                    : 'Generate Plain-English Summary'}
+                </button>
+              }
+            >
+              {contract.plain_english_summary ? (
+                <p className="text-sm text-slate-700 whitespace-pre-line">
+                  {contract.plain_english_summary}
+                </p>
+              ) : (
+                <p className="text-sm text-slate-400">
+                  Generate a friendly, jargon-free explanation of this contract.
+                </p>
               )}
             </Section>
 
