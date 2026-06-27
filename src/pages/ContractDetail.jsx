@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+iimport { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import {
@@ -10,6 +10,7 @@ import {
   updateContract,
 } from '../lib/contracts'
 import ClauseExplainer from '../components/ClauseExplainer'
+import PrivacyReview from '../components/PrivacyReview'
 
 const riskColors = {
   Low: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -386,6 +387,11 @@ function ContractDetail() {
                 </p>
               )}
             </Section>
+
+            <PrivacyReview
+              contract={contract}
+              onUpdated={(updated) => setContract(updated)}
+            />
 
             <ClauseExplainer />
           </>
