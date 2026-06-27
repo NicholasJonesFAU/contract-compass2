@@ -9,6 +9,7 @@ import {
   detectMissingClauses,
   updateContract,
 } from '../lib/contracts'
+import ClauseExplainer from '../components/ClauseExplainer'
 
 const riskColors = {
   Low: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -37,6 +38,7 @@ function Section({ title, children, action }) {
 function ContractDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+
   const [contract, setContract] = useState(null)
   const [fetching, setFetching] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
@@ -61,6 +63,7 @@ function ContractDetail() {
   const handleAnalyze = async () => {
     setError(null)
     setAnalyzing(true)
+
     try {
       const result = await analyzeContract(contract.redacted_text)
       const updated = await saveAnalysis(id, result)
@@ -75,6 +78,7 @@ function ContractDetail() {
   const handlePlainEnglish = async () => {
     setError(null)
     setSummarizing(true)
+
     try {
       const result = await generatePlainEnglish(contract.redacted_text)
       const updated = await updateContract(id, {
@@ -91,6 +95,7 @@ function ContractDetail() {
   const handleMissingClauses = async () => {
     setError(null)
     setDetectingClauses(true)
+
     try {
       const result = await detectMissingClauses(contract.redacted_text)
       const updated = await updateContract(id, {
@@ -130,6 +135,7 @@ function ContractDetail() {
       >
         Edit
       </button>
+
       <button
         onClick={handleAnalyze}
         disabled={analyzing}
@@ -168,31 +174,33 @@ function ContractDetail() {
           </div>
         ) : (
           <>
-            {/* Risk + summary */}
             <Section title="Overview">
               <div className="flex items-center gap-3 mb-3">
                 <span
                   className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${
-                    riskColors[contract.risk_level] || 'bg-slate-50 text-slate-600 border-slate-200'
+                    riskColors[contract.risk_level] ||
+                    'bg-slate-50 text-slate-600 border-slate-200'
                   }`}
                 >
                   {contract.risk_level} risk
                 </span>
+
                 {contract.risk_score != null && (
                   <span className="text-xs text-slate-500">
                     Risk score: {contract.risk_score}/10
                   </span>
                 )}
+
                 {contract.auto_renewal && (
                   <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 text-xs font-medium">
                     Auto-renews
                   </span>
                 )}
               </div>
+
               <p className="text-sm text-slate-700">{contract.summary}</p>
             </Section>
 
-            {/* Plain-English summary (Feature 2) */}
             <Section
               title="Plain-English summary"
               action={
@@ -204,8 +212,8 @@ function ContractDetail() {
                   {summarizing
                     ? 'Generating Summary...'
                     : contract.plain_english_summary
-                    ? 'Regenerate'
-                    : 'Generate Plain-English Summary'}
+                      ? 'Regenerate'
+                      : 'Generate Plain-English Summary'}
                 </button>
               }
             >
@@ -220,7 +228,6 @@ function ContractDetail() {
               )}
             </Section>
 
-            {/* Key terms */}
             <Section title="Key terms">
               <dl className="space-y-3">
                 {[
@@ -229,16 +236,19 @@ function ContractDetail() {
                   ['Payment', contract.payment_terms],
                 ].map(([label, value]) => (
                   <div key={label}>
-                    <dt className="text-xs font-medium text-slate-500">{label}</dt>
+                    <dt className="text-xs font-medium text-slate-500">
+                      {label}
+                    </dt>
                     <dd className="text-sm text-slate-700">
-                      {value || <span className="text-slate-400">Not specified</span>}
+                      {value || (
+                        <span className="text-slate-400">Not specified</span>
+                      )}
                     </dd>
                   </div>
                 ))}
               </dl>
             </Section>
 
-            {/* Deadlines */}
             <Section title="Important deadlines">
               {contract.important_deadlines?.length ? (
                 <ul className="space-y-3">
@@ -248,17 +258,21 @@ function ContractDetail() {
                         <span className="text-sm font-medium text-slate-900">
                           {d.deadline_type}
                         </span>
+
                         {d.importance && (
                           <span
                             className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                              importanceColors[d.importance] || 'bg-slate-100 text-slate-600'
+                              importanceColors[d.importance] ||
+                              'bg-slate-100 text-slate-600'
                             }`}
                           >
                             {d.importance}
                           </span>
                         )}
                       </div>
+
                       <p className="text-sm text-slate-600">{d.description}</p>
+
                       {d.date_or_trigger && (
                         <p className="text-xs text-slate-400 mt-0.5">
                           {d.date_or_trigger}
@@ -268,11 +282,12 @@ function ContractDetail() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-400">No deadlines identified.</p>
+                <p className="text-sm text-slate-400">
+                  No deadlines identified.
+                </p>
               )}
             </Section>
 
-            {/* Obligations */}
             <Section title="Obligations">
               {contract.obligations?.length ? (
                 <ul className="space-y-3">
@@ -282,13 +297,16 @@ function ContractDetail() {
                         <span className="text-xs font-medium text-slate-500">
                           {o.party}
                         </span>
+
                         {o.deadline_or_frequency && (
                           <span className="text-xs text-slate-400">
                             · {o.deadline_or_frequency}
                           </span>
                         )}
                       </div>
+
                       <p className="text-sm text-slate-700">{o.obligation}</p>
+
                       {o.risk_if_missed && (
                         <p className="text-xs text-slate-400 mt-0.5">
                           Risk if missed: {o.risk_if_missed}
@@ -298,11 +316,12 @@ function ContractDetail() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-400">No obligations identified.</p>
+                <p className="text-sm text-slate-400">
+                  No obligations identified.
+                </p>
               )}
             </Section>
 
-            {/* Missing clauses (Feature 5) */}
             <Section
               title="Potentially missing clauses"
               action={
@@ -314,8 +333,8 @@ function ContractDetail() {
                   {detectingClauses
                     ? 'Analyzing Missing Clauses...'
                     : contract.missing_clauses?.length
-                    ? 'Re-analyze'
-                    : 'Analyze Missing Clauses'}
+                      ? 'Re-analyze'
+                      : 'Analyze Missing Clauses'}
                 </button>
               }
             >
@@ -328,19 +347,25 @@ function ContractDetail() {
                           <span className="text-sm font-medium text-slate-900">
                             ⚠ {c.clause_name}
                           </span>
+
                           {c.importance && (
                             <span
                               className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                                importanceColors[c.importance] || 'bg-slate-100 text-slate-600'
+                                importanceColors[c.importance] ||
+                                'bg-slate-100 text-slate-600'
                               }`}
                             >
                               {c.importance}
                             </span>
                           )}
                         </div>
+
                         {c.why_it_matters && (
-                          <p className="text-sm text-slate-600">{c.why_it_matters}</p>
+                          <p className="text-sm text-slate-600">
+                            {c.why_it_matters}
+                          </p>
                         )}
+
                         {c.recommendation && (
                           <p className="text-xs text-slate-400 mt-0.5">
                             {c.recommendation}
@@ -349,6 +374,7 @@ function ContractDetail() {
                       </li>
                     ))}
                   </ul>
+
                   <p className="mt-3 text-[11px] text-slate-400">
                     Informational only — not legal advice.
                   </p>
@@ -360,6 +386,8 @@ function ContractDetail() {
                 </p>
               )}
             </Section>
+
+            <ClauseExplainer />
           </>
         )}
       </div>
