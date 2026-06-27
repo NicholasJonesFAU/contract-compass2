@@ -11,18 +11,18 @@ Incremental, verifiable build roadmap. Work **one step at a time**, verify the c
 |2|Configure Tailwind CSS|✅|
 |3|Add Supabase client + env config|✅|
 |4|Create database schema + RLS|✅|
-|5|Registration page|⬜|
-|6|Login page|⬜|
-|7|Logout + session context|⬜|
-|8|Protect private routes|⬜|
-|9|Dashboard shell|⬜|
-|10|Contracts CRUD|⬜|
-|11|Auto-redaction API/helper|⬜|
-|12|Manual redaction review page|⬜|
-|13|AI analysis API route|⬜|
-|14|Contract detail analysis display|⬜|
-|15|Privacy/security polish|⬜|
-|16|Netlify deployment|⬜|
+|5|Registration page|✅|
+|6|Login page|✅|
+|7|Logout + session context|✅|
+|8|Protect private routes|✅|
+|9|Dashboard shell|✅|
+|10|Contracts CRUD|✅|
+|11|Auto-redaction API/helper|✅|
+|12|Manual redaction review page|✅|
+|13|AI analysis API route|✅|
+|14|Contract detail analysis display|✅|
+|15|Privacy/security polish|✅|
+|16|Netlify deployment|✅|
 |17|README, AGENTS.md, and demo|⬜|
 
 \---
