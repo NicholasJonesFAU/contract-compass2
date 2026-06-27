@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import ContractForm from './pages/ContractForm'
 import ProtectedRoute from './components/ProtectedRoute'
+import ContractDetail from './pages/ContractDetail'
 
 function App() {
   return (
@@ -35,6 +36,14 @@ function App() {
         }
       />
       <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route
+        path="/contracts/:id"
+        element={
+          <ProtectedRoute>
+            <ContractDetail />
+          </ProtectedRoute>
+        }
+    />
     </Routes>
   )
 }

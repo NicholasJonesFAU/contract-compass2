@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { listContracts, deleteContract } from '../lib/contracts'
 
-
 function Dashboard() {
   const navigate = useNavigate()
   const [contracts, setContracts] = useState([])
@@ -34,7 +33,6 @@ function Dashboard() {
       setError(e.message)
     }
   }
-
 
   const newButton = (
     <button
@@ -76,7 +74,8 @@ function Dashboard() {
             {contracts.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between rounded-xl bg-white border border-slate-200 px-5 py-4"
+                onClick={() => navigate(`/contracts/${c.id}`)}
+                className="flex items-center justify-between rounded-xl bg-white border border-slate-200 px-5 py-4 cursor-pointer hover:border-slate-300 transition-colors"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-900 truncate">
@@ -88,13 +87,19 @@ function Dashboard() {
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <button
-                    onClick={() => navigate(`/contracts/${c.id}/edit`)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      navigate(`/contracts/${c.id}/edit`)
+                    }}
                     className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors"
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(c.id, c.title)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDelete(c.id, c.title)
+                    }}
                     className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                   >
                     Delete

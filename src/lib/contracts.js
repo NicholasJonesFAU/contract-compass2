@@ -68,3 +68,20 @@ export async function analyzeContract(redactedText) {
   }
   return res.json()
 }
+
+// Save analysis fields onto an existing contract.
+export async function saveAnalysis(id, analysis) {
+  const fields = {
+    summary: analysis.summary ?? '',
+    plain_english_summary: analysis.plain_english_summary ?? '',
+    risk_level: analysis.risk_level ?? null,
+    risk_score: analysis.risk_score ?? null,
+    auto_renewal: analysis.auto_renewal ?? false,
+    renewal_terms: analysis.renewal_terms ?? '',
+    termination_terms: analysis.termination_terms ?? '',
+    payment_terms: analysis.payment_terms ?? '',
+    important_deadlines: analysis.important_deadlines ?? [],
+    obligations: analysis.obligations ?? [],
+  }
+  return updateContract(id, fields)
+}
