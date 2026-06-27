@@ -6,11 +6,11 @@ function App() {
       </h1>
       <p className="text-slate-600 max-w-lg">
         Privacy-conscious contract analysis. Paste a contract, redact what
-        matters, and get a structured breakdown — without ever storing the
+        matters, and get a structured breakdown without ever storing the
         original text.
       </p>
       <p className="mt-8 text-sm text-slate-400">
-        Step 2 complete · Tailwind CSS is wired up.
+        Step 3 complete - Supabase client configured.
       </p>
     </div>
   )
