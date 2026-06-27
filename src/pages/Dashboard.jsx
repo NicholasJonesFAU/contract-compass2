@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { listContracts, deleteContract } from '../lib/contracts'
-import { redactText } from '../lib/redaction'
+
 
 function Dashboard() {
   const navigate = useNavigate()
@@ -34,13 +34,7 @@ function Dashboard() {
       setError(e.message)
     }
   }
-  useEffect(() => {
-  const sample = `This Agreement is between Acme Holdings LLC and Mr. John Smith,
-reachable at john.smith@example.com or (561) 555-0123.
-SSN: 123-45-6789. Office at 100 Main Street, Suite 200.`
-  console.log('--- Redaction test ---')
-  console.log(redactText(sample))
-}, [])
+
 
   const newButton = (
     <button
