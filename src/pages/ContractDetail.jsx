@@ -6,6 +6,7 @@ import {
   analyzeContract,
   saveAnalysis,
   generatePlainEnglish,
+  detectMissingClauses,
   updateContract,
 } from '../lib/contracts'
 
@@ -40,6 +41,7 @@ function ContractDetail() {
   const [fetching, setFetching] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [summarizing, setSummarizing] = useState(false)
+  const [detectingClauses, setDetectingClauses] = useState(false)
   const [error, setError] = useState(null)
 
   const load = async () => {
@@ -83,6 +85,22 @@ function ContractDetail() {
       setError(e.message)
     } finally {
       setSummarizing(false)
+    }
+  }
+
+  const handleMissingClauses = async () => {
+    setError(null)
+    setDetectingClauses(true)
+    try {
+      const result = await detectMissingClauses(contract.redacted_text)
+      const updated = await updateContract(id, {
+        missing_clauses: result.missing_clauses,
+      })
+      setContract(updated)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setDetectingClauses(false)
     }
   }
 
@@ -281,6 +299,65 @@ function ContractDetail() {
                 </ul>
               ) : (
                 <p className="text-sm text-slate-400">No obligations identified.</p>
+              )}
+            </Section>
+
+            {/* Missing clauses (Feature 5) */}
+            <Section
+              title="Potentially missing clauses"
+              action={
+                <button
+                  onClick={handleMissingClauses}
+                  disabled={detectingClauses}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 transition-colors"
+                >
+                  {detectingClauses
+                    ? 'Analyzing Missing Clauses...'
+                    : contract.missing_clauses?.length
+                    ? 'Re-analyze'
+                    : 'Analyze Missing Clauses'}
+                </button>
+              }
+            >
+              {contract.missing_clauses?.length ? (
+                <>
+                  <ul className="space-y-3">
+                    {contract.missing_clauses.map((c, i) => (
+                      <li key={i} className="border-l-2 border-amber-200 pl-3">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-sm font-medium text-slate-900">
+                            ⚠ {c.clause_name}
+                          </span>
+                          {c.importance && (
+                            <span
+                              className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                                importanceColors[c.importance] || 'bg-slate-100 text-slate-600'
+                              }`}
+                            >
+                              {c.importance}
+                            </span>
+                          )}
+                        </div>
+                        {c.why_it_matters && (
+                          <p className="text-sm text-slate-600">{c.why_it_matters}</p>
+                        )}
+                        {c.recommendation && (
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {c.recommendation}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-[11px] text-slate-400">
+                    Informational only — not legal advice.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-slate-400">
+                  Check for common business clauses that may be absent from this
+                  contract.
+                </p>
               )}
             </Section>
           </>
