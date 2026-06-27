@@ -54,3 +54,17 @@ export async function deleteContract(id) {
   const { error } = await supabase.from('contracts').delete().eq('id', id)
   if (error) throw error
 }
+
+// Send redacted text to the serverless analyze function, get structured JSON back.
+export async function analyzeContract(redactedText) {
+  const res = await fetch('/.netlify/functions/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ redacted_text: redactedText }),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Analysis failed')
+  }
+  return res.json()
+}

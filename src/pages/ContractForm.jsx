@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { createContract, getContract, updateContract } from '../lib/contracts'
+import {
+  createContract,
+  getContract,
+  updateContract,
+  analyzeContract,
+} from '../lib/contracts'
 import { redactText } from '../lib/redaction'
 
 const statLabels = {
@@ -39,6 +44,10 @@ function ContractForm() {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(isEdit)
 
+  // Step 13 test state (temporary — Step 14 replaces this)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState(null)
+
   useEffect(() => {
     if (!isEdit) return
     getContract(id)
@@ -70,7 +79,22 @@ function ContractForm() {
   const handleStartOver = () => {
     setRedactedText('')
     setStats({})
+    setAnalysisResult(null)
     setStage('paste')
+  }
+
+  const handleAnalyze = async () => {
+    setError(null)
+    setAnalyzing(true)
+    try {
+      const result = await analyzeContract(redactedText)
+      setAnalysisResult(result)
+      console.log('Analysis result:', result)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setAnalyzing(false)
+    }
   }
 
   const handleSave = async () => {
@@ -218,6 +242,15 @@ function ContractForm() {
                 >
                   {loading ? 'Saving...' : isEdit ? 'Save changes' : 'Save contract'}
                 </button>
+
+                <button
+                  onClick={handleAnalyze}
+                  disabled={analyzing}
+                  className="rounded-lg border border-slate-300 bg-white text-sm font-medium px-5 py-2.5 text-slate-700 hover:bg-slate-100 disabled:opacity-50 transition-colors"
+                >
+                  {analyzing ? 'Analyzing...' : 'Test analyze'}
+                </button>
+
                 {!isEdit && (
                   <button
                     onClick={handleStartOver}
@@ -235,6 +268,12 @@ function ContractForm() {
                   </button>
                 )}
               </div>
+
+              {analysisResult && (
+                <pre className="mt-4 rounded-lg bg-slate-900 text-slate-100 text-xs p-4 overflow-auto max-h-96">
+                  {JSON.stringify(analysisResult, null, 2)}
+                </pre>
+              )}
             </div>
           </div>
         )}
