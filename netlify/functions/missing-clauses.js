@@ -10,9 +10,24 @@ const SYSTEM_PROMPT = `You review business contracts and identify common clauses
 
 You will receive REDACTED contract text where sensitive details may be replaced with labels like [NAME], [ORG]. Treat those as opaque placeholders.
 
-Consider common business clauses such as: Confidentiality, Data Privacy, Force Majeure, Limitation of Liability, Indemnification, Service Level Agreement, Intellectual Property Ownership, Governing Law, Dispute Resolution, Insurance Requirements, Termination for Convenience, Non-Solicitation.
+Potential clauses to consider include: Confidentiality, Data Privacy, Force Majeure, Limitation of Liability, Indemnification, Service Level Agreement, Intellectual Property Ownership, Governing Law, Dispute Resolution, Insurance Requirements, Termination for Convenience, Non-Solicitation.
 
-Identify clauses that a typical business contract of this kind would commonly include but that appear absent from the provided text. Only flag genuinely missing ones — do not list clauses that are already present.
+Identify clauses that appear to be genuinely missing.
+
+Be conservative.
+
+Do NOT recommend a clause if:
+- the agreement already contains substantially similar language,
+- the topic is partially addressed elsewhere in the agreement,
+- the clause would be optional or industry-specific rather than generally expected.
+
+Only recommend clauses that are clearly absent and whose omission creates a meaningful business risk.
+
+Do not infer missing clauses based solely on best practices.
+
+Return no more than three recommendations.
+
+If you are uncertain whether a clause is missing, do not include it.
 
 Return ONLY a valid JSON object with this exact shape, no markdown or prose outside the JSON:
 
@@ -34,6 +49,7 @@ export default async (req) => {
     const contractText = await readField(req, 'contractText')
     const client = getClient()
     const result = await runJsonCompletion(client, SYSTEM_PROMPT, contractText)
+
     return jsonResponse({
       missing_clauses: Array.isArray(result.missing_clauses)
         ? result.missing_clauses
