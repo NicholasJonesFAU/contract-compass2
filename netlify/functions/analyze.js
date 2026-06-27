@@ -39,38 +39,33 @@ Rules:
 - important_deadlines and obligations must always be arrays (use [] if none).
 - risk_score must be an integer from 1 (very low risk) to 10 (very high risk), consistent with risk_level.`
 
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
 export default async (req) => {
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return jsonResponse({ error: 'Method not allowed' }, 405)
   }
 
   let body
   try {
     body = await req.json()
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return jsonResponse({ error: 'Invalid JSON body' }, 400)
   }
 
   const redactedText = body?.redacted_text
   if (!redactedText || !redactedText.trim()) {
-    return new Response(
-      JSON.stringify({ error: 'redacted_text is required' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    )
+    return jsonResponse({ error: 'redacted_text is required' }, 400)
   }
 
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: 'Server missing OPENAI_API_KEY' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    )
+    return jsonResponse({ error: 'Server missing OPENAI_API_KEY' }, 500)
   }
 
   const client = new OpenAI({
@@ -96,20 +91,18 @@ export default async (req) => {
     try {
       parsed = JSON.parse(raw)
     } catch {
-      return new Response(
-        JSON.stringify({ error: 'Model did not return valid JSON' }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
+      return jsonResponse({ error: 'Model did not return valid JSON' }, 502)
+    }
+
+    return jsonResponse(parsed)
+  } catch (err) {
+    if (err.status === 429) {
+      return jsonResponse(
+        { error: 'AI service is temporarily busy. Please try again in a moment.' },
+        429
       )
     }
 
-    return new Response(JSON.stringify(parsed), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  } catch (err) {
-    return new Response(
-      JSON.stringify({ error: err.message || 'Analysis failed' }),
-      { status: 502, headers: { 'Content-Type': 'application/json' } }
-    )
+    return jsonResponse({ error: err.message || 'Analysis failed' }, 502)
   }
 }
