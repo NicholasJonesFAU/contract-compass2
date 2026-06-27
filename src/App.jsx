@@ -1,27 +1,16 @@
 function App() {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'system-ui, sans-serif',
-        textAlign: 'center',
-        padding: '2rem',
-      }}
-    >
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center text-center p-8 bg-slate-50">
+      <h1 className="text-4xl font-bold text-slate-900 mb-2">
         Contract Compass
       </h1>
-      <p style={{ color: '#555', maxWidth: '32rem' }}>
+      <p className="text-slate-600 max-w-lg">
         Privacy-conscious contract analysis. Paste a contract, redact what
         matters, and get a structured breakdown — without ever storing the
         original text.
       </p>
-      <p style={{ marginTop: '2rem', fontSize: '0.875rem', color: '#999' }}>
-        Step 1 complete · Vite + React is running.
+      <p className="mt-8 text-sm text-slate-400">
+        Step 2 complete · Tailwind CSS is wired up.
       </p>
     </div>
   )
