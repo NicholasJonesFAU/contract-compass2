@@ -94,6 +94,13 @@ for each row execute function public.set_updated_at();
 -- Enable RLS
 alter table public.contracts enable row level security;
 
+-- Grant table access to authenticated users.
+-- GRANT says "this role may touch the table"; RLS restricts WHICH rows.
+-- Both are required: a table created via raw SQL does not auto-grant the way
+-- the Table Editor does, so this GRANT is necessary to avoid a
+-- "permission denied for table" error.
+grant select, insert, update, delete on public.contracts to authenticated;
+
 -- SELECT: users see only their own contracts
 create policy "select own contracts"
 on public.contracts for select

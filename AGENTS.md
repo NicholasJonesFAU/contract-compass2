@@ -1,16 +1,22 @@
 # AGENTS.md — Contract Compass
 
-This document describes the AI component of Contract Compass: what it does, how it is invoked, the strict input/output contract, and the guardrails around it. It is the reference for anyone (human or coding agent) working on the analysis feature.
+This document describes the AI component of Contract Compass: what it does, how it is invoked, the input/output contract, and the guardrails around it.
 
 ## What the AI does
 
-Contract Compass uses a single **structured-extraction** AI feature — **not a chatbot**. Given the user-approved **redacted** contract text, the AI returns a fixed-shape JSON object describing the contract's summary, risk, key terms, deadlines, and obligations. There is no open-ended conversation, no follow-up turns, and no freeform generation outside the schema.
+Contract Compass uses a single **structured-extraction** AI feature — **not a chatbot**. Given the user-approved **redacted** contract text, the AI returns a fixed-shape JSON object describing the contract's summary, risk, key terms, deadlines, and obligations. There is no open-ended conversation and no freeform generation outside the schema.
 
 ## Where it runs
 
 - The AI call happens **server-side only**, inside a Netlify serverless function (`netlify/functions/analyze.js`).
-- The `OPENAI_API_KEY` lives in the function's environment and is **never** exposed to the browser.
-- The client sends only the redacted text to the function; the function calls OpenAI and returns parsed JSON.
+- The API key is read from the function's environment (`OPENAI_API_KEY`) and is **never** exposed to the browser.
+- The client calls `/.netlify/functions/analyze` with the redacted text; the function calls the model and returns parsed JSON.
+
+## Model
+
+- Default model: `gpt-4o-mini` (overridable via the `LLM_MODEL` env var).
+- The function uses the OpenAI SDK and can target any OpenAI-compatible endpoint via an optional `OPENAI_BASE_URL`, so the provider can be swapped without code changes.
+- Temperature is set low (`0.2`) for consistent, extraction-style output.
 
 ## Input contract
 
@@ -20,12 +26,12 @@ The function accepts:
 { "redacted_text": "string (already redacted and user-approved)" }
 ```
 
-- Input must be non-empty redacted text. The function rejects empty/missing input.
-- The function assumes redaction has already happened on the client and been approved by the user. It does not receive or handle raw unredacted text.
+- Input must be non-empty redacted text. Empty or missing input is rejected with a `400`.
+- Redaction has already happened client-side and been approved by the user. The function never receives raw unredacted text.
 
 ## Output contract
 
-The model is instructed to return JSON in **exactly** this shape (JSON mode / response_format enforced where available):
+The model is instructed (via `response_format: { type: "json_object" }`) to return JSON in exactly this shape:
 
 ```json
 {
@@ -56,31 +62,27 @@ The model is instructed to return JSON in **exactly** this shape (JSON mode / re
 }
 ```
 
-Field expectations:
-- `risk_level` is one of `Low`, `Medium`, `High`.
-- `risk_score` is an integer 1–10.
-- `auto_renewal` is a boolean.
-- `important_deadlines` and `obligations` are arrays (possibly empty) of the objects above.
-- Each output field maps directly to a column on the `contracts` table.
+Each field maps directly to a column on the `contracts` table. `important_deadlines` and `obligations` are stored as `jsonb`.
 
-## Prompt design (guidance)
+## Prompt design
 
-The system prompt should:
-- Define the model's role as a contract analysis extractor that outputs **only** valid JSON in the schema above — no prose, no markdown fences.
-- Instruct it to base its analysis solely on the provided text and to use empty strings / empty arrays when information is absent rather than inventing details.
-- Ask it to flag uncertainty inside the relevant text fields rather than fabricating dates, parties, or amounts.
+The system prompt instructs the model to:
+
+- Act as a contract analysis extractor that outputs **only** valid JSON in the schema above — no markdown, no prose.
+- Treat redaction labels (`[NAME]`, `[ORG]`, etc.) as opaque placeholders and analyze around them.
+- Base analysis solely on the provided text, using empty strings / empty arrays when information is absent rather than inventing details.
+- Keep `risk_score` an integer 1–10 consistent with `risk_level`.
 
 ## Guardrails
 
-- **No raw text:** the AI only ever receives redacted text. Raw contract text is never sent, stored, or logged.
-- **Server-only key:** the OpenAI key is read from the function environment; it is never bundled into client code or prefixed with `VITE_`.
-- **Schema validation:** the function parses and validates the model's JSON before returning it. Malformed output is rejected/retried rather than passed through blindly.
-- **Graceful failure:** empty input, API errors, and unparseable responses return clear error states; the UI never silently shows stale or partial analysis.
-- **Not legal advice:** outputs are informational extractions, not legal advice. The UI should make this clear to users.
-- **Determinism preference:** a low temperature is preferred for consistent, extraction-style output.
+- **No raw text:** the AI only ever receives redacted, user-approved text.
+- **Server-only key:** the key is read from the function environment; never bundled into client code or prefixed with `VITE_`.
+- **Validation:** the function parses the model's response as JSON and returns a `502` if it is not valid JSON, rather than passing malformed output through.
+- **Graceful failure:** bad method, invalid body, empty input, missing key, and API errors all return clear status codes and messages.
+- **Not legal advice:** outputs are informational extractions, not legal advice.
 
 ## Files
 
-- `netlify/functions/analyze.js` — serverless handler that calls OpenAI and returns validated JSON.
-- `src/lib/contracts.js` — persists the returned fields to the `contracts` row.
+- `netlify/functions/analyze.js` — serverless handler that calls the model and returns validated JSON.
+- `src/lib/contracts.js` — `analyzeContract` (calls the function) and `saveAnalysis` (persists results).
 - `src/pages/ContractDetail.jsx` — renders the structured analysis.
