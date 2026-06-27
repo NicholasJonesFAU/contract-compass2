@@ -6,3 +6,15 @@
 [dev]
   framework = "vite"
   targetPort = 5173
+
+# Route /api/* to serverless functions (optional convenience)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# SPA fallback — must be LAST so it doesn't catch function routes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
