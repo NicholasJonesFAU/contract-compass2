@@ -11,6 +11,11 @@ const PATTERNS = [
     regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
   },
   {
+    label: 'URL',
+    // https://example.com or http://example.com/path
+    regex: /\bhttps?:\/\/[^\s]+/g,
+  },
+  {
     label: 'SSN',
     // 123-45-6789 or 123 45 6789
     regex: /\b\d{3}[-\s]\d{2}[-\s]\d{4}\b/g,
@@ -24,13 +29,19 @@ const PATTERNS = [
     label: 'ADDRESS',
     // number + up to a few words + a street suffix
     regex:
-      /\b\d{1,6}\s+(?:[A-Za-z0-9.'-]+\s+){0,4}(?:Street|St|Avenue|Ave|Boulevard|Blvd|Road|Rd|Lane|Ln|Drive|Dr|Court|Ct|Place|Pl|Way|Terrace|Ter|Circle|Cir|Highway|Hwy|Suite|Ste)\b\.?/gi,
+      /\b\d{1,6}\s+(?:[A-Za-z0-9.'-]+\s+){0,6}(?:Street|St|Avenue|Ave|Boulevard|Blvd|Road|Rd|Lane|Ln|Drive|Dr|Court|Ct|Place|Pl|Way|Terrace|Ter|Circle|Cir|Highway|Hwy|Suite|Ste)\b\.?/gi,
   },
   {
     label: 'ORG',
-    // Capitalized run ending in a corporate suffix: "Acme Holdings LLC"
+    // Company names ending in common business suffixes.
+    // Allows commas before suffixes, like "Bright Harbor Analytics, LLC"
     regex:
-      /\b(?:[A-Z][A-Za-z&.'-]*\s+){0,5}[A-Z][A-Za-z&.'-]*\s+(?:Inc|LLC|L\.L\.C\.|Ltd|Corp|Corporation|Company|Co|LLP|LP|PLC|GmbH|Group|Holdings|Partners|Associates)\b\.?/g,
+      /\b(?:[A-Z][A-Za-z0-9&.',’\-]*\s+){0,6}[A-Z][A-Za-z0-9&.',’\-]*,?\s+(?:Inc\.?|Incorporated|LLC|L\.L\.C\.|Ltd\.?|Limited|Corp\.?|Corporation|Company|Co\.?|LLP|L\.L\.P\.|LP|PLC|GmbH|Group|Holdings|Partners|Associates)\b\.?/g,
+  },
+  {
+    label: 'CONTACT_NAME',
+    // Attn: General Counsel, Attn: Jane Smith, etc.
+    regex: /\bAttn:\s*[A-Z][A-Za-z0-9&.',’\- ]+/g,
   },
   {
     label: 'NAME',
@@ -50,8 +61,12 @@ export function redactText(rawText) {
 
   for (const { label, regex } of PATTERNS) {
     text = text.replace(regex, (match) => {
-      // Skip if this span was already redacted (avoids nested replacements)
-      if (match.includes('[' + label + ']')) return match
+      // Skip anything that is already a redaction token.
+      // This prevents later patterns from mangling [EMAIL], [ORG], [ADDRESS], etc.
+      if (/\[[A-Z_]+\]/.test(match)) {
+        return match
+      }
+
       stats[label] = (stats[label] || 0) + 1
       return `[${label}]`
     })
