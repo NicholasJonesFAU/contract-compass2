@@ -85,3 +85,37 @@ export async function saveAnalysis(id, analysis) {
   }
   return updateContract(id, fields)
 }
+
+// Generic POST to an AI feature endpoint with consistent error handling.
+async function postAi(path, payload) {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'AI request failed')
+  }
+  return res.json()
+}
+
+// Feature 2: Plain-English summary
+export async function generatePlainEnglish(contractText) {
+  return postAi('/api/plain-english-summary', { contractText })
+}
+
+// Feature 3: Explain a clause (on-demand, not saved)
+export async function explainClause(clauseText) {
+  return postAi('/api/explain-clause', { clauseText })
+}
+
+// Feature 4: AI redaction suggestions (on-demand, not saved)
+export async function getRedactionSuggestions(redactedText) {
+  return postAi('/api/redaction-suggestions', { redactedText })
+}
+
+// Feature 5: Missing clause detection
+export async function detectMissingClauses(contractText) {
+  return postAi('/api/missing-clauses', { contractText })
+}
