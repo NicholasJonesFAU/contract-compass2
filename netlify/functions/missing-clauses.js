@@ -6,13 +6,11 @@ import {
   errorResponse,
 } from './_aiHelper.js'
 
-const SYSTEM_PROMPT = `You review business contracts and provide AI-generated suggestions about clauses that may warrant additional review.
+const SYSTEM_PROMPT = `You review a business contract and identify common, standard clauses that appear to be ENTIRELY ABSENT from it.
 
 You will receive REDACTED contract text where sensitive details may be replaced with labels like [NAME], [ORG], [EMAIL], or [ADDRESS]. Treat those as opaque placeholders.
 
-Your task is to identify up to three contract areas that may be missing, incomplete, vague, or worth human review.
-
-First, check whether the contract already contains substantially similar language for common business clauses such as:
+Check the contract against this list of common business clauses:
 - Confidentiality
 - Data Privacy
 - Force Majeure
@@ -25,20 +23,19 @@ First, check whether the contract already contains substantially similar languag
 - Insurance Requirements
 - Termination for Convenience
 - Non-Solicitation
-- Data retention or deletion
-- Breach notification
-- Audit rights
-- Compliance obligations
 
-Do NOT recommend a clause if the agreement clearly contains a complete and specific version of that clause.
+Rules:
+- Only flag a clause if it is ENTIRELY ABSENT. If the contract addresses the topic at all — even briefly — do NOT flag it.
+- Do not invent new clause categories outside the list above.
+- Do not flag a clause as missing if related language is present under a different name.
+- If the contract genuinely covers all of the above, return an EMPTY array. Returning zero results is correct and expected for a comprehensive contract. Do not manufacture flags to fill space.
+- Report at most 5 of the most significant genuinely-absent clauses, most important first.
 
-If a topic is only briefly mentioned, vague, incomplete, or missing important details, you MAY recommend it as an area for review.
-
-Prefer recommendations related to privacy, data handling, operational risk, compliance, service expectations, and unclear responsibilities.
-
-Avoid presenting recommendations as legal conclusions. Phrase them as areas for review.
-
-Return exactly 2 or 3 recommendations unless the contract is extremely comprehensive.
+For each genuinely-absent clause, set:
+- "clause_name": the clause name from the list above (exact).
+- "importance": "Low", "Medium", or "High" — how significant its absence is for a typical contract of this kind.
+- "why_it_matters": one concrete sentence about the specific risk of NOT having this clause. Be specific to the consequence; do not write vague filler like "this may warrant review."
+- "recommendation": one concrete sentence suggesting what to consider adding, phrased as a general business consideration.
 
 Return ONLY a valid JSON object with this exact shape, no markdown or prose outside the JSON:
 
@@ -47,8 +44,8 @@ Return ONLY a valid JSON object with this exact shape, no markdown or prose outs
     {
       "clause_name": "",
       "importance": "Low | Medium | High",
-      "why_it_matters": "a short, plain explanation of why this area may deserve review",
-      "recommendation": "a short suggestion, phrased as a consideration"
+      "why_it_matters": "",
+      "recommendation": ""
     }
   ]
 }
