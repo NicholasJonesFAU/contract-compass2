@@ -4,7 +4,7 @@ A privacy-conscious contract analysis web app. Paste a contract, automatically r
 
 **Live demo:** https://contract-compassnj.netlify.app/
 
-**Demo video:** <!-- PASTE YOUR VIDEO LINK HERE (e.g. unlisted YouTube) -->
+**Demo video:** https://www.loom.com/share/29af9875e53644d8820019e10a8a6410
 
 ---
 
@@ -36,8 +36,7 @@ All AI output is informational only and is **not legal advice**. Endpoint reques
 
 ## Screenshots
 
-| Dashboard | Redaction review |
-|---|---|
+![alt text](image.png)
 | ![Dashboard](docs/screenshots/dashboard.png) | ![Redaction review](docs/screenshots/redaction-review.png) |
 
 | Contract analysis |
