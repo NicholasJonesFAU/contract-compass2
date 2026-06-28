@@ -36,12 +36,13 @@ All AI output is informational only and is **not legal advice**. Endpoint reques
 
 ## Screenshots
 
-![alt text](image.png)
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Redaction review](docs/screenshots/redaction-review.png) |
+| Dashboard | Redaction Review |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Redaction Review](docs/screenshots/redaction-review.png) |
 
-| Contract analysis |
+| Contract Analysis |
 |---|
-| ![Analysis](docs/screenshots/analysis.png) |
+| ![Contract Analysis](docs/screenshots/analysis.png) |
 
 ## Tech stack
 
